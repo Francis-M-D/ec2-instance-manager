@@ -2,6 +2,8 @@
 *.env
 !.env.example
 
+!frontend/.env
+
 # Python
 __pycache__/
 *.pyc
@@ -17,3 +19,4 @@ dist/
 
 # OS
 .DS_Store
+
