@@ -1,0 +1,61 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ec2manager
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  cloud-service:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.cloud-service
+    restart: unless-stopped
+    env_file:
+      - ../cloud-service/.env
+    ports:
+      - "8001:8001"
+
+  backend:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.backend
+    restart: unless-stopped
+    env_file:
+      - ../backend/.env
+    environment:
+      EC2MANAGER_DB_CONNECTION: "Server=mysql;Port=3306;Database=ec2manager;User=root;Password=root;"
+      EC2MANAGER_CLOUD_SERVICE_URL: "http://cloud-service:8001"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      cloud-service:
+        condition: service_started
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.frontend
+      args:
+        VITE_API_BASE_URL: "http://localhost:8000"
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+volumes:
+  mysql_data:

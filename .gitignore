@@ -1,0 +1,19 @@
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# .NET
+bin/
+obj/
+
+# Node
+node_modules/
+dist/
+
+# OS
+.DS_Store
